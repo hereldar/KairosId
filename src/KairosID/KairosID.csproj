@@ -2,14 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <AssemblyName>KairosId</AssemblyName>
     <RootNamespace>KairosId</RootNamespace>
+    <PackageId>KairosId</PackageId>
+    <Description>High-performance C# library for generating unique, time-ordered identifiers.</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>KairosId.Tests</_Parameter1>
+      <_Parameter1>KairosId.Tests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100edbffcb7991aad930ed1abe26960e23e34888434e04b04a76bcf9d7505ef0676b1005dcda689148124c6a4f672a7fcf35b4edc2acca473bdd331f07f5b38cd1006fdd524290c27ea5c4d8e596a6fc3139299781db964672642bfa6ea1c93a5262ae10f7f6624aa7b77a397723579139097f735443dfa09a801fff49a5053f1e6</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 
