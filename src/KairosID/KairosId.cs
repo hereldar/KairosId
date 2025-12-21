@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using System.Security.Cryptography;
 using KairosID.Formats;
 
 namespace KairosID;
@@ -86,17 +85,19 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
             throw new ArgumentOutOfRangeException(nameof(timestamp), "Timestamp must be after Jan 1 2020.");
         }
         
-        // 48 bits check: 2^48 ms is approx 8925 years.
-        // But let's check explicit max if needed.
+        // 48 bits check
         if (msSinceEpoch >= (1L << TimestampBits))
         {
             throw new ArgumentOutOfRangeException(nameof(timestamp), "Timestamp too far in the future.");
         }
 
         // Generate 58 bits of randomness
-        // We need 8 bytes (64 bits) and mask it.
         Span<byte> randomBytes = stackalloc byte[8];
-        RandomNumberGenerator.Fill(randomBytes);
+        
+        // Use Random.Shared for performance (userspace PRNG)
+        // This is significantly faster than RandomNumberGenerator.
+        Random.Shared.NextBytes(randomBytes);
+        
         ulong random64 = BitConverter.ToUInt64(randomBytes);
         
         // Take lower 58 bits
@@ -140,9 +141,6 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// <summary>
     /// Tries to parse a span of characters into a KairosId.
     /// </summary>
-    /// <summary>
-    /// Tries to parse a span of characters into a KairosId.
-    /// </summary>
     public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out KairosId result)
     {
         // Simple heuristic detection based on length
@@ -166,9 +164,10 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
                 return true;
             }
         }
-        else if (s.Length == 32 || s.Length == 27) // Hex
+        else if (s.Length == 27 || s.Length == 32) // Hex
         {
-            if (UInt128.TryParse(s, System.Globalization.NumberStyles.HexNumber, provider, out var val))
+            // Use optimized Base16 decoder
+            if (Formats.Base16.TryDecode(s, out var val))
             {
                 result = new KairosId(val);
                 return true;
@@ -201,7 +200,7 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     // Explicit parsing methods for clarity
     public static KairosId ParseBase58(ReadOnlySpan<char> s) => Formats.Base58.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base58");
     public static KairosId ParseBase32(ReadOnlySpan<char> s) => Formats.Base32.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base32");
-    public static KairosId ParseHex(ReadOnlySpan<char> s) => UInt128.TryParse(s, System.Globalization.NumberStyles.HexNumber, null, out var v) ? new KairosId(v) : throw new FormatException("Invalid Hex");
+    public static KairosId ParseHex(ReadOnlySpan<char> s) => Formats.Base16.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Hex");
     public static KairosId ParseBase64(ReadOnlySpan<char> s) => TryParseBase64(s, out var v) ? v : throw new FormatException("Invalid Base64");
 
     public static bool TryParseBase64(ReadOnlySpan<char> s, out KairosId result)
@@ -247,10 +246,6 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
 
     public string ToString(string? format, IFormatProvider? formatProvider)
     {
-        // Allocation-free-ish path?
-        // We have to return a string, so allocation happens.
-        // We can use string.Create
-        
         format = string.IsNullOrEmpty(format) ? "B58" : format.ToUpperInvariant();
 
         switch (format)
@@ -267,18 +262,18 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
                 });
             case "B16":
             case "X":
-                // Hex
-                return _value.ToString("X27", formatProvider); // 106 bits is ~27 hex digits (26.5)
+                return string.Create(27, _value, (span, val) =>
+                {
+                    Formats.Base16.TryEncode(val, span, true, out _); // Default Upper
+                });
             case "B64":
-                // Base64
-                // We'll treat the 14 needed bytes ??
-                // Let's do full 16 bytes for generic safety.
-                byte[] bytes = new byte[16];
-                // Write Big Endian
-                // UInt128.WriteBigEndian works? Not in .NET 7/8 standard?
-                // BinaryPrimitives has WriteUInt128BigEndian in .NET 8
-                System.Buffers.Binary.BinaryPrimitives.WriteUInt128BigEndian(bytes, _value);
-                return Convert.ToBase64String(bytes);
+                // 128 bit = 16 bytes. Base64 is 4 chars per 3 bytes. 16/3 = 5.33 -> 6 blocks -> 24 chars.
+                return string.Create(24, _value, (span, val) =>
+                {
+                    Span<byte> bytes = stackalloc byte[16];
+                    System.Buffers.Binary.BinaryPrimitives.WriteUInt128BigEndian(bytes, val);
+                    Convert.TryToBase64Chars(bytes, span, out _);
+                });
                 
             default:
                 throw new FormatException($"Unknown format '{format}'. Supported: B58, B32, B16, B64.");
@@ -290,7 +285,6 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
         // Default B58
         if (format.IsEmpty) format = "B58";
         
-        // Simple switch on first char for speed?
         char f = char.ToUpperInvariant(format[0]);
         
         if (format.Equals("B58", StringComparison.OrdinalIgnoreCase))
@@ -301,12 +295,13 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
         {
              return Formats.Base32.TryEncode(_value, destination, out charsWritten);
         }
-        else if (format.Equals("B16", StringComparison.OrdinalIgnoreCase) || f == 'X' || f == 'N' || f == 'D')
+        else if (format.Equals("B16", StringComparison.OrdinalIgnoreCase) || f == 'X')
         {
-            // For N and D we match Guid behavior (no extras, hyphens etc not supported for now in custom bits)
-            // But let's just use X27 or X32.
-            string fmt = (f == 'X') ? "X" : "X32"; 
-            return _value.TryFormat(destination, out charsWritten, fmt, provider);
+             bool upper = true;
+             // Check if specifically 'x' (lowercase)
+             if (format.Length == 1 && format[0] == 'x') upper = false;
+             
+             return Formats.Base16.TryEncode(_value, destination, upper, out charsWritten);
         }
         else if (format.Equals("B64", StringComparison.OrdinalIgnoreCase))
         {
