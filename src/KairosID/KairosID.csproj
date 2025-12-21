@@ -7,5 +7,10 @@
     <AssemblyName>KairosId</AssemblyName>
     <RootNamespace>KairosId</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>KairosId.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
 </Project>

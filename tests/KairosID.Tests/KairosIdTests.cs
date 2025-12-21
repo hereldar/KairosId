@@ -151,4 +151,76 @@ public class KairosIdTests
         Assert.Equal(UInt128.Zero, id.Value);
         Assert.Equal(input, id.ToString());
     }
+
+    [Fact]
+    public void Equality_And_Comparison_Operators_Work()
+    {
+        var id1 = KairosId.NewKairosId();
+        Thread.Sleep(1);
+        var id2 = KairosId.NewKairosId();
+        var id1Copy = KairosId.Parse(id1.ToString());
+
+        // Equality
+        Assert.True(id1 == id1Copy);
+        Assert.False(id1 == id2);
+        Assert.True(id1 != id2);
+        Assert.False(id1 != id1Copy);
+
+        // Comparison
+        Assert.True(id1 < id2);
+        Assert.True(id1 <= id2);
+        Assert.True(id1 <= id1Copy);
+        Assert.True(id2 > id1);
+        Assert.True(id2 >= id1);
+        Assert.True(id1 >= id1Copy);
+    }
+
+    [Fact]
+    public void GetHashCode_IsConsistent()
+    {
+        var id1 = KairosId.NewKairosId();
+        var id1Copy = KairosId.Parse(id1.ToString());
+
+        Assert.Equal(id1.GetHashCode(), id1Copy.GetHashCode());
+    }
+
+    [Fact]
+    public void TryParse_InvalidFormats_ReturnsFalse()
+    {
+        Assert.False(KairosId.TryParse("TooShort", null, out _));
+        Assert.False(KairosId.TryParse("TooLong123456789012345678901234567890", null, out _));
+        Assert.False(KairosId.TryParse("InvalidChars!!@@##", null, out _));
+        Assert.False(KairosId.TryParse((string?)null, null, out _));
+    }
+
+    [Fact]
+    public void Parse_InvalidFormat_ThrowsFormatException()
+    {
+        Assert.Throws<FormatException>(() => KairosId.Parse("Invalid"));
+    }
+
+    [Fact]
+    public void NewKairosId_SpecificDate_Works()
+    {
+        var date = new DateTimeOffset(2023, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var id = KairosId.NewKairosId(date);
+        
+        Assert.Equal(date, id.Timestamp);
+    }
+
+    [Fact]
+    public void NewKairosId_PastDate_ThrowsArgumentOutOfRangeException()
+    {
+        var pastDate = new DateTimeOffset(2019, 12, 31, 23, 59, 59, TimeSpan.Zero);
+        Assert.Throws<ArgumentOutOfRangeException>(() => KairosId.NewKairosId(pastDate));
+    }
+
+    [Fact]
+    public void NewId_Obsolete_Works()
+    {
+#pragma warning disable CS0618
+        var id = KairosId.NewId();
+#pragma warning restore CS0618
+        Assert.NotEqual(KairosId.Empty, id);
+    }
 }
