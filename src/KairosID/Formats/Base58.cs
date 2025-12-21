@@ -2,7 +2,7 @@ using System;
 using System.Buffers;
 using System.Numerics;
 
-namespace KairosID.Formats;
+namespace KairosId.Formats;
 
 internal static class Base58
 {

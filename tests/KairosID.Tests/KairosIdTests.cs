@@ -1,7 +1,9 @@
 using System.Numerics;
 using Xunit;
 
-namespace KairosID.Tests;
+using KairosId;
+
+namespace KairosId.Tests;
 
 public class KairosIdTests
 {

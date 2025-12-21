@@ -5,9 +5,9 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KairosID", "src\KairosID\KairosID.csproj", "{24061AA4-948C-4476-B113-8C7343437855}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KairosId", "src\KairosId\KairosId.csproj", "{24061AA4-948C-4476-B113-8C7343437855}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KairosID.Tests", "tests\KairosID.Tests\KairosID.Tests.csproj", "{7DF9FF15-6C0D-4763-8550-B6FE95B2CDCC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KairosId.Tests", "tests\KairosId.Tests\KairosId.Tests.csproj", "{7DF9FF15-6C0D-4763-8550-B6FE95B2CDCC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

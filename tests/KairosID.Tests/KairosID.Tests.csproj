@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\KairosID\KairosID.csproj" />
+    <ProjectReference Include="..\..\src\KairosId\KairosId.csproj" />
   </ItemGroup>
 
 </Project>

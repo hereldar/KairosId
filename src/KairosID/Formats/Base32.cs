@@ -1,6 +1,6 @@
 using System;
 
-namespace KairosID.Formats;
+namespace KairosId.Formats;
 
 internal static class Base32
 {
@@ -119,7 +119,7 @@ internal static class Base32
     public static bool TryDecode(ReadOnlySpan<char> source, out UInt128 result)
     {
         // Fixed length check for optimal performance?
-        // Or unroll with fallback? KairosID expects 22 chars for Base32.
+        // Or unroll with fallback? KairosId expects 22 chars for Base32.
         if (source.Length != 22)
         {
             result = 0;

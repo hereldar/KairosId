@@ -1,8 +1,8 @@
 using BenchmarkDotNet.Attributes;
-using KairosID;
+using KairosId;
 using System;
 
-namespace KairosID.Benchmarks;
+namespace KairosId.Benchmarks;
 
 [MemoryDiagnoser]
 [HideColumns("Error", "StdDev", "Median", "RatioSD")]

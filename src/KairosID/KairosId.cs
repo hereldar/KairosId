@@ -1,9 +1,9 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using KairosID.Formats;
+using KairosId.Formats;
 
-namespace KairosID;
+namespace KairosId;
 
 /// <summary>
 /// Represents a 106-bit identifier composed of a 48-bit timestamp and 58-bit randomness.

@@ -1,6 +1,6 @@
 using System;
 
-namespace KairosID.Formats;
+namespace KairosId.Formats;
 
 internal static class Base16
 {

@@ -1,6 +1,9 @@
-# KairosID
+# KairosId
 
-KairosID is a high-performance C# library for generating unique, time-ordered identifiers. It is designed to be lightweight, efficient, and easy to use in modern .NET applications.
+**KairosId** is a high-performance C# library for generating unique, time-ordered identifiers. It is designed to be lightweight, efficient, and easy to use in modern .NET applications.
+
+> [!TIP]
+> **What's in a name?** The name comes from the ancient Greek word *kairos* (καιρός), which refers to the "opportune moment" or "the right time"—unlike *chronos* (χρόνος), which refers to chronological or sequential time. This library is designed to be exactly that: the opportune identifier for your modern .NET applications.
 
 ## Features
 
@@ -20,49 +23,49 @@ This library targets .NET 8 and later. You can reference the project directly or
 ### Generating IDs
 
 ```csharp
-using KairosID;
+using KairosId;
 
-// Generate a new ID
-KairosId id = KairosId.NewId();
+// Generate a new ID (current time)
+KairosId id = KairosId.NewKairosId();
 
-Console.WriteLine(id); // Output: Base58 string (e.g., "...encoded string...")
+// Generate an ID for a specific timestamp
+var oldId = KairosId.NewKairosId(DateTimeOffset.UtcNow.AddDays(-1));
+
+Console.WriteLine(id); // Output: Base58 string (e.g., "7Yh9S...")
 ```
 
 ### Parsing IDs
 
 ```csharp
-// Parse from string (detects Base58 and Base32 automatically)
+// Parse from string (detects format based on length)
 KairosId id = KairosId.Parse("your-id-string");
 
-// Parse specific formats
+// Explicit parsing for specific formats
 KairosId idFromHex = KairosId.ParseHex("...");
 KairosId idFromBase32 = KairosId.ParseBase32("...");
+KairosId idFromBase64 = KairosId.ParseBase64("...");
 ```
 
-### Formatting
+### Explicit Formatting
 
-You can convert the ID to different string formats using `ToString(format)`.
-
-- **Base58 (Default)**: `"B58"` - 18 characters (e.g., `123...abc`)
-- **Base32 (Crockford)**: `"B32"` - 22 characters.
-- **Hex (Base16)**: `"B16"` or `"X"` - Standard hexadecimal.
-- **Base64**: `"B64"` - Standard Base64.
+While `ToString()` defaults to Base58, you can use explicit methods for better readability:
 
 ```csharp
-var id = KairosId.NewId();
+var id = KairosId.NewKairosId();
 
-Console.WriteLine(id.ToString("B58")); // Default
-Console.WriteLine(id.ToString("B32"));
-Console.WriteLine(id.ToString("B16"));
+string b58 = id.ToBase58(); // Default (18 chars)
+string b32 = id.ToBase32(); // Crockford (22 chars)
+string hex = id.ToHex();    // Hexadecimal (27 chars)
+string b64 = id.ToBase64(); // Base64 (24 chars)
 ```
 
-### sorting
+### Sorting
 
-Ids implement `IComparable`, so you can sort collections of IDs directly. They will be ordered chronologically by their timestamp.
+`KairosId` implements `IComparable<KairosId>`, so you can sort collections of IDs directly. They will be ordered chronologically.
 
 ```csharp
 var ids = new List<KairosId> { id3, id1, id2 };
-ids.Sort(); // Arranges strictly by time/value
+ids.Sort(); // Arranges by time-value
 ```
 
 ### Timestamps
@@ -75,8 +78,20 @@ DateTimeOffset timestamp = id.Timestamp;
 
 ## How It Works
 
-KairosID uses a 106-bit structure packing:
+**KairosId** uses a 106-bit structure packing:
 - **Timestamp (48 bits)**: High bits. Milliseconds since Jan 1, 2020.
-- **Randomness (58 bits)**: Low bits. Cryptographically secure random values.
+- **Randomness (58 bits)**: Low bits. Fast pseudo-random values (`Random.Shared`).
 
 This structure ensures that IDs generated later will numerically be larger than earlier IDs (monotonicity), while providing sufficient collision resistance for distributed systems.
+
+## Comparisons
+
+Interested in how **KairosId** stacks up against other identifier libraries? Check out our detailed comparisons:
+
+- [**Interface Comparison**](docs/comparison_interface.md): API and usage differences.
+- [**Performance Comparison**](docs/comparison_performance.md): Benchmark results and analysis.
+- [**Implementation Comparison**](docs/comparison_implementation.md): Technical design and structure.
+
+## Credits
+
+Special thanks to the [**Cysharp/Ulid**](https://github.com/Cysharp/Ulid) library. It served as a vital reference and inspiration for significantly improving the performance of KairosId.

@@ -1,7 +1,7 @@
 .PHONY: tests benchmarks
 
 tests:
-	dotnet test tests/KairosID.Tests/KairosID.Tests.csproj
+	dotnet test tests/KairosId.Tests/KairosId.Tests.csproj
 
 benchmarks:
-	dotnet run -c Release --project benchmark/KairosID.Benchmarks/KairosID.Benchmarks.csproj
+	dotnet run -c Release --project benchmark/KairosId.Benchmarks/KairosId.Benchmarks.csproj
