@@ -76,6 +76,22 @@ You can extract the creation time from any ID:
 DateTimeOffset timestamp = id.Timestamp;
 ```
 
+### Strongly-Typed IDs
+
+For better domain modeling and type safety, it is highly recommended to wrap `KairosId` in a `readonly record struct`. This prevents accidental assignment of different ID types:
+
+```csharp
+public readonly record struct ProductId(KairosId Value)
+{
+    public static ProductId New() => new(KairosId.NewKairosId());
+    public override string ToString() => Value.ToString();
+    public static implicit operator KairosId(ProductId id) => id.Value;
+}
+
+// Usage
+public void ProcessOrder(CustomerId customerId, ProductId productId) { ... }
+```
+
 ## How It Works
 
 **KairosId** uses a 106-bit structure packing:
