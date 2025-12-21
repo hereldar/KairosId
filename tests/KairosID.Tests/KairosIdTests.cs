@@ -6,30 +6,48 @@ namespace KairosID.Tests;
 public class KairosIdTests
 {
     [Fact]
-    public void NewId_GeneratesUniqueIds()
+    public void NewKairosId_GeneratesUniqueIds()
     {
-        var id1 = KairosId.NewId();
-        var id2 = KairosId.NewId();
+        var id1 = KairosId.NewKairosId();
+        var id2 = KairosId.NewKairosId();
         
         Assert.NotEqual(id1, id2);
     }
     
     [Fact]
-    public void NewId_IsTimeOrdered()
+    public void NewKairosId_IsTimeOrdered()
     {
         // Generate two IDs with a slight delay
-        var id1 = KairosId.NewId();
+        var id1 = KairosId.NewKairosId();
         Thread.Sleep(10); // Ensure clock ticks
-        var id2 = KairosId.NewId();
+        var id2 = KairosId.NewKairosId();
         
         Assert.True(id1 < id2);
         Assert.True(id1.Timestamp < id2.Timestamp);
     }
 
     [Fact]
+    public void Empty_IsZero()
+    {
+        var id = KairosId.Empty;
+        Assert.Equal(UInt128.Zero, id.Value);
+    }
+
+    [Fact]
+    public void ToByteArray_CorrectLayout()
+    {
+        var id = KairosId.NewKairosId();
+        byte[] bytes = id.ToByteArray();
+        
+        Assert.Equal(16, bytes.Length);
+        UInt128 recovered = System.Buffers.Binary.BinaryPrimitives.ReadUInt128BigEndian(bytes);
+        Assert.Equal(id.Value, recovered);
+    }
+
+    [Fact]
     public void ToString_Default_IsBase58()
     {
-        var id = KairosId.NewId();
+        var id = KairosId.NewKairosId();
         string s = id.ToString();
         
         Assert.Equal(18, s.Length);
@@ -41,67 +59,72 @@ public class KairosIdTests
     }
 
     [Fact]
+    public void ExplicitFormatting_Methods_Work()
+    {
+        var id = KairosId.NewKairosId();
+        
+        Assert.Equal(id.ToString("B58"), id.ToBase58());
+        Assert.Equal(id.ToString("B32"), id.ToBase32());
+        Assert.Equal(id.ToString("B16"), id.ToHex());
+        Assert.Equal(id.ToString("B64"), id.ToBase64());
+    }
+
+    [Fact]
     public void Formats_WorkAndRoundtrip()
     {
-        var id = KairosId.NewId();
+        var id = KairosId.NewKairosId();
         
         // Base58
-        string b58 = id.ToString("B58");
+        string b58 = id.ToBase58();
         Assert.Equal(18, b58.Length);
         Assert.Equal(id, KairosId.Parse(b58));
         
         // Base32
-        string b32 = id.ToString("B32");
+        string b32 = id.ToBase32();
         Assert.Equal(22, b32.Length);
-        var parsed32 = KairosId.ParseBase32(b32);
-        Assert.Equal(id, parsed32);
+        Assert.Equal(id, KairosId.ParseBase32(b32));
         
         // Hex
-        string b16 = id.ToString("B16");
-        // Length should be >= 27
+        string b16 = id.ToHex();
         Assert.True(b16.Length >= 27);
-        var parsed16 = KairosId.ParseHex(b16);
-        Assert.Equal(id, parsed16);
+        Assert.Equal(id, KairosId.ParseHex(b16));
         
         // Base64
-        string b64 = id.ToString("B64");
-        // 16 bytes -> 24 chars (padded)
+        string b64 = id.ToBase64();
         Assert.Equal(24, b64.Length);
-        // We don't have a direct ParseBase64 helper exposed in KairosId yet, 
-        // but we can test semi-manually or add ParseBase64?
-        // Actually typical Parse() logic doesn't detect B64 easily vs others without hints
-        // unless regex.
-        // But let's verify decoding manually via span
-        Span<byte> bytes = stackalloc byte[16];
-        Convert.TryFromBase64String(b64, bytes, out _);
-        UInt128 val = System.Buffers.Binary.BinaryPrimitives.ReadUInt128BigEndian(bytes);
-        Assert.Equal(id.Value, val);
+        Assert.Equal(id, KairosId.ParseBase64(b64));
     }
 
     [Fact]
     public void Parse_AutoDetectsFormat()
     {
-        var id = KairosId.NewId();
+        var id = KairosId.NewKairosId();
         
-        // Base58 (18 chars)
-        Assert.Equal(id, KairosId.Parse(id.ToString()));
+        Assert.Equal(id, KairosId.Parse(id.ToBase58()));
+        Assert.Equal(id, KairosId.Parse(id.ToBase32()));
+        Assert.Equal(id, KairosId.Parse(id.ToHex()));
+        Assert.Equal(id, KairosId.Parse(id.ToBase64()));
+    }
+
+    [Fact]
+    public void ISpanParsable_Works()
+    {
+        var id = KairosId.NewKairosId();
+        ReadOnlySpan<char> span = id.ToBase58().AsSpan();
         
-        // Base32 (22 chars)
-        Assert.Equal(id, KairosId.Parse(id.ToString("B32")));
-        
-        // Hex detection isn't implemented in generic TryParse unless length matches?
-        // My implementation only detects length 18 and 22 currently.
-        // So Hex won't auto-parse via generic Parse().
+        bool success = KairosId.TryParse(span, null, out var result);
+        Assert.True(success);
+        Assert.Equal(id, result);
     }
 
     [Fact]
     public void Timestamp_Extraction_Correct()
     {
         var now = DateTimeOffset.UtcNow;
-        // Truncate to ms precision as KairosId is ms precise
+        // Truncate to ms precision
         now = DateTimeOffset.FromUnixTimeMilliseconds(now.ToUnixTimeMilliseconds());
         
-        var id = KairosId.NewId(now);
+        var id = KairosId.NewKairosId(now);
         
         Assert.Equal(now, id.Timestamp);
     }
@@ -112,8 +135,8 @@ public class KairosIdTests
         var t1 = DateTimeOffset.UtcNow;
         var t2 = t1.AddMilliseconds(1);
         
-        var id1 = KairosId.NewId(t1);
-        var id2 = KairosId.NewId(t2);
+        var id1 = KairosId.NewKairosId(t1);
+        var id2 = KairosId.NewKairosId(t2);
         
         Assert.True(id1.CompareTo(id2) < 0);
     }

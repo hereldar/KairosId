@@ -11,7 +11,7 @@ namespace KairosID;
 /// The identifier is designed to be time-ordered (k-sorted).
 /// Default string representation is Base58 (18 characters).
 /// </summary>
-public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, IParsable<KairosId>, ISpanFormattable
+public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, IParsable<KairosId>, ISpanParsable<KairosId>, ISpanFormattable
 {
     private const int TimestampBits = 48;
     private const int RandomBits = 58;
@@ -29,6 +29,11 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// Gets the raw 128-bit value of the identifier.
     /// </summary>
     public UInt128 Value => _value;
+
+    /// <summary>
+    /// A read-only instance of the KairosId struct whose value is all zeros.
+    /// </summary>
+    public static KairosId Empty => default;
 
     /// <summary>
     /// Gets the timestamp component of the identifier.
@@ -52,9 +57,19 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// Generates a new unique KairosId.
     /// </summary>
     /// <returns>A new KairosId.</returns>
+    public static KairosId NewKairosId()
+    {
+        return NewKairosId(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// Generates a new unique KairosId.
+    /// </summary>
+    /// <returns>A new KairosId.</returns>
+    [Obsolete("Use NewKairosId instead.")]
     public static KairosId NewId()
     {
-        return NewId(DateTimeOffset.UtcNow);
+        return NewKairosId();
     }
 
     /// <summary>
@@ -62,7 +77,7 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// </summary>
     /// <param name="timestamp">The timestamp to use.</param>
     /// <returns>A new KairosId.</returns>
-    public static KairosId NewId(DateTimeOffset timestamp)
+    public static KairosId NewKairosId(DateTimeOffset timestamp)
     {
         long msSinceEpoch = timestamp.ToUnixTimeMilliseconds() - EpochTimestamp;
 
@@ -125,19 +140,16 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// <summary>
     /// Tries to parse a span of characters into a KairosId.
     /// </summary>
+    /// <summary>
+    /// Tries to parse a span of characters into a KairosId.
+    /// </summary>
     public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out KairosId result)
     {
-        // Simple heuristic detection or standard?
-        // If s starts with typical hex chars or length differs?
+        // Simple heuristic detection based on length
         // Base58 length is 18.
         // Base32 length is 22.
-        // Hex length is 27 (106/4 -> 26.5) -> 27 chars usually? Or 32 for full UInt128?
-        // Let's assume input matches expected 18 chars Base58 if no clues.
+        // Hex length is 27 (usually) or 32 for full UInt128.
         
-        // For strict correctness with format provider we might want per-format Parse methods, 
-        // but IParsable implies generic.
-        
-        // Try Base58 first (default) if length is 18
         if (s.Length == 18)
         {
              if (Formats.Base58.TryDecode(s, out var val))
@@ -154,18 +166,55 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
                 return true;
             }
         }
+        else if (s.Length == 32 || s.Length == 27) // Hex
+        {
+            if (UInt128.TryParse(s, System.Globalization.NumberStyles.HexNumber, provider, out var val))
+            {
+                result = new KairosId(val);
+                return true;
+            }
+        }
+        else if (s.Length == 24) // Base64 (128 bits -> 16 bytes -> 24 chars with padding)
+        {
+            if (TryParseBase64(s, out result))
+            {
+                return true;
+            }
+        }
         
-        // Fallback to generic parsing logic?
-        // Hex?
         result = default;
         return false;
+    }
+
+    /// <summary>
+    /// Parses a span of characters into a KairosId.
+    /// </summary>
+    public static KairosId Parse(ReadOnlySpan<char> s, IFormatProvider? provider = null)
+    {
+        if (!TryParse(s, provider, out var result))
+        {
+            throw new FormatException("Invalid KairosId format.");
+        }
+        return result;
     }
     
     // Explicit parsing methods for clarity
     public static KairosId ParseBase58(ReadOnlySpan<char> s) => Formats.Base58.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base58");
     public static KairosId ParseBase32(ReadOnlySpan<char> s) => Formats.Base32.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base32");
-    // Hex parsing
     public static KairosId ParseHex(ReadOnlySpan<char> s) => UInt128.TryParse(s, System.Globalization.NumberStyles.HexNumber, null, out var v) ? new KairosId(v) : throw new FormatException("Invalid Hex");
+    public static KairosId ParseBase64(ReadOnlySpan<char> s) => TryParseBase64(s, out var v) ? v : throw new FormatException("Invalid Base64");
+
+    public static bool TryParseBase64(ReadOnlySpan<char> s, out KairosId result)
+    {
+        Span<byte> bytes = stackalloc byte[16];
+        if (Convert.TryFromBase64Chars(s, bytes, out int bytesWritten) && bytesWritten == 16)
+        {
+            result = new KairosId(System.Buffers.Binary.BinaryPrimitives.ReadUInt128BigEndian(bytes));
+            return true;
+        }
+        result = default;
+        return false;
+    }
 
     // Equality
     public bool Equals(KairosId other) => _value == other._value;
@@ -180,6 +229,16 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     public static bool operator <=(KairosId left, KairosId right) => left.CompareTo(right) <= 0;
     public static bool operator >(KairosId left, KairosId right) => left.CompareTo(right) > 0;
     public static bool operator >=(KairosId left, KairosId right) => left.CompareTo(right) >= 0;
+
+    /// <summary>
+    /// Returns a 16-element byte array that contains the value of this instance.
+    /// </summary>
+    public byte[] ToByteArray()
+    {
+        byte[] bytes = new byte[16];
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt128BigEndian(bytes, _value);
+        return bytes;
+    }
 
     // Formatting
     public override string ToString() => ToString(null, null);
@@ -242,9 +301,12 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
         {
              return Formats.Base32.TryEncode(_value, destination, out charsWritten);
         }
-        else if (format.Equals("B16", StringComparison.OrdinalIgnoreCase) || f == 'X')
+        else if (format.Equals("B16", StringComparison.OrdinalIgnoreCase) || f == 'X' || f == 'N' || f == 'D')
         {
-            return _value.TryFormat(destination, out charsWritten, "X27", provider);
+            // For N and D we match Guid behavior (no extras, hyphens etc not supported for now in custom bits)
+            // But let's just use X27 or X32.
+            string fmt = (f == 'X') ? "X" : "X32"; 
+            return _value.TryFormat(destination, out charsWritten, fmt, provider);
         }
         else if (format.Equals("B64", StringComparison.OrdinalIgnoreCase))
         {
@@ -258,4 +320,10 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
         charsWritten = 0;
         return false;
     }
+
+    // Explicit Instance Methods for Strings
+    public string ToBase58() => ToString("B58");
+    public string ToBase32() => ToString("B32");
+    public string ToHex() => ToString("B16");
+    public string ToBase64() => ToString("B64");
 }
