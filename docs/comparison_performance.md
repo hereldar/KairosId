@@ -21,11 +21,9 @@ The following table summarizes the speed and memory usage of each library on mod
 | **NewKairosId**  |  **22.27 ns** |  0.12 |          **0 B** |
 | NewUlid          |     20.02 ns |  0.11 |              0 B |
 | NewGuid          |    184.02 ns |  1.00 |              0 B |
-| :--------------- | -----------: | ----: | ---------------: |
 | **KairosIdToString (Base58)** | **299.80 ns** | 1.63 | **64 B** |
 | UlidToString (Base32) | 36.25 ns | 0.20 | 80 B |
 | GuidToString (Hex) | 203.99 ns | 1.11 | 96 B |
-| :--------------- | -----------: | ----: | ---------------: |
 | **ParseKairosId** | **17.78 ns** | 0.10 | **0 B** |
 | ParseUlid        |      6.96 ns| 0.04 | 0 B |
 | ParseGuid        |      8.58 ns| 0.05 | 0 B |

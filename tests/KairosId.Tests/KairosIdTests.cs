@@ -1,8 +1,3 @@
-using System.Numerics;
-using Xunit;
-
-using KairosId;
-
 namespace KairosId.Tests;
 
 public class KairosIdTests
@@ -213,14 +208,5 @@ public class KairosIdTests
     {
         var pastDate = new DateTimeOffset(2019, 12, 31, 23, 59, 59, TimeSpan.Zero);
         Assert.Throws<ArgumentOutOfRangeException>(() => KairosId.NewKairosId(pastDate));
-    }
-
-    [Fact]
-    public void NewId_Obsolete_Works()
-    {
-#pragma warning disable CS0618
-        var id = KairosId.NewId();
-#pragma warning restore CS0618
-        Assert.NotEqual(KairosId.Empty, id);
     }
 }

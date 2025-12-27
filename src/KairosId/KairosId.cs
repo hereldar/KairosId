@@ -1,6 +1,4 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using KairosId.Formats;
 
 namespace KairosId;
@@ -15,10 +13,6 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     private const int TimestampBits = 48;
     private const int RandomBits = 58;
     private const long EpochTimestamp = 1577836800000; // Jan 1 2020 UTC in ms
-    private const int EncodedLength = 18; // Base58 length
-
-    // Mask for 58 bits of randomness
-    private static readonly UInt128 RandomMask = (UInt128.One << RandomBits) - 1;
 
     // The internal 128-bit storage.
     // Layout (Big Endian conceptual view): [00...00 (22 bits)] [Timestamp (48 bits)] [Random (58 bits)]
@@ -59,16 +53,6 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     public static KairosId NewKairosId()
     {
         return NewKairosId(DateTimeOffset.UtcNow);
-    }
-
-    /// <summary>
-    /// Generates a new unique KairosId.
-    /// </summary>
-    /// <returns>A new KairosId.</returns>
-    [Obsolete("Use NewKairosId instead.")]
-    public static KairosId NewId()
-    {
-        return NewKairosId();
     }
 
     /// <summary>
@@ -147,33 +131,37 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
         // Base58 length is 18.
         // Base32 length is 22.
         // Hex length is 27 (usually) or 32 for full UInt128.
+        // Base64 length is 24.
         
+        // Base58
         if (s.Length == 18)
         {
-             if (Formats.Base58.TryDecode(s, out var val))
+             if (Base58.TryDecode(s, out var val))
              {
                  result = new KairosId(val);
                  return true;
              }
         }
-        else if (s.Length == 22) // Base32
+        // Base32
+        else if (s.Length == 22)
         {
-            if (Formats.Base32.TryDecode(s, out var val))
+            if (Base32.TryDecode(s, out var val))
             {
                 result = new KairosId(val);
                 return true;
             }
         }
-        else if (s.Length == 27 || s.Length == 32) // Hex
+        // Hex
+        else if (s.Length == 27 || s.Length == 32)
         {
-            // Use optimized Base16 decoder
-            if (Formats.Base16.TryDecode(s, out var val))
+            if (Base16.TryDecode(s, out var val))
             {
                 result = new KairosId(val);
                 return true;
             }
         }
-        else if (s.Length == 24) // Base64 (128 bits -> 16 bytes -> 24 chars with padding)
+        // Base64 (128 bits -> 16 bytes -> 24 chars with padding)
+        else if (s.Length == 24)
         {
             if (TryParseBase64(s, out result))
             {
@@ -198,12 +186,12 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     }
     
     // Explicit parsing methods for clarity
-    public static KairosId ParseBase58(ReadOnlySpan<char> s) => Formats.Base58.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base58");
-    public static KairosId ParseBase32(ReadOnlySpan<char> s) => Formats.Base32.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base32");
-    public static KairosId ParseHex(ReadOnlySpan<char> s) => Formats.Base16.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Hex");
+    public static KairosId ParseBase58(ReadOnlySpan<char> s) => Base58.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base58");
+    public static KairosId ParseBase32(ReadOnlySpan<char> s) => Base32.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base32");
+    public static KairosId ParseHex(ReadOnlySpan<char> s) => Base16.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Hex");
     public static KairosId ParseBase64(ReadOnlySpan<char> s) => TryParseBase64(s, out var v) ? v : throw new FormatException("Invalid Base64");
 
-    public static bool TryParseBase64(ReadOnlySpan<char> s, out KairosId result)
+    private static bool TryParseBase64(ReadOnlySpan<char> s, out KairosId result)
     {
         Span<byte> bytes = stackalloc byte[16];
         if (Convert.TryFromBase64Chars(s, bytes, out int bytesWritten) && bytesWritten == 16)
@@ -253,18 +241,18 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
             case "B58":
                 return string.Create(18, _value, (span, val) => 
                 {
-                    Formats.Base58.TryEncode(val, span, out _);
+                    Base58.TryEncode(val, span, out _);
                 });
             case "B32":
                  return string.Create(22, _value, (span, val) => 
                 {
-                    Formats.Base32.TryEncode(val, span, out _);
+                    Base32.TryEncode(val, span, out _);
                 });
             case "B16":
             case "X":
                 return string.Create(27, _value, (span, val) =>
                 {
-                    Formats.Base16.TryEncode(val, span, true, out _); // Default Upper
+                    Base16.TryEncode(val, span, true, out _); // Default Upper
                 });
             case "B64":
                 // 128 bit = 16 bytes. Base64 is 4 chars per 3 bytes. 16/3 = 5.33 -> 6 blocks -> 24 chars.
@@ -289,27 +277,29 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
         
         if (format.Equals("B58", StringComparison.OrdinalIgnoreCase))
         {
-            return Formats.Base58.TryEncode(_value, destination, out charsWritten);
+            return Base58.TryEncode(_value, destination, out charsWritten);
         }
-        else if (format.Equals("B32", StringComparison.OrdinalIgnoreCase))
+
+        if (format.Equals("B32", StringComparison.OrdinalIgnoreCase))
         {
-             return Formats.Base32.TryEncode(_value, destination, out charsWritten);
+            return Base32.TryEncode(_value, destination, out charsWritten);
         }
-        else if (format.Equals("B16", StringComparison.OrdinalIgnoreCase) || f == 'X')
+
+        if (format.Equals("B16", StringComparison.OrdinalIgnoreCase) || f == 'X')
         {
-             bool upper = true;
-             // Check if specifically 'x' (lowercase)
-             if (format.Length == 1 && format[0] == 'x') upper = false;
-             
-             return Formats.Base16.TryEncode(_value, destination, upper, out charsWritten);
+            // Check if specifically 'x' (lowercase)
+            bool upper = !(format.Length == 1 && format[0] == 'x');
+
+            return Base16.TryEncode(_value, destination, upper, out charsWritten);
         }
-        else if (format.Equals("B64", StringComparison.OrdinalIgnoreCase))
+
+        if (format.Equals("B64", StringComparison.OrdinalIgnoreCase))
         {
-             // Span-based Base64?
-             // Need bytes first.
-             Span<byte> bytes = stackalloc byte[16];
-             System.Buffers.Binary.BinaryPrimitives.WriteUInt128BigEndian(bytes, _value);
-             return Convert.TryToBase64Chars(bytes, destination, out charsWritten);
+            // Span-based Base64?
+            // Need bytes first.
+            Span<byte> bytes = stackalloc byte[16];
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt128BigEndian(bytes, _value);
+            return Convert.TryToBase64Chars(bytes, destination, out charsWritten);
         }
 
         charsWritten = 0;

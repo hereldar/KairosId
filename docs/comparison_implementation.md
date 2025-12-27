@@ -6,11 +6,11 @@ This report explains the technical differences between `KairosId`, `Cysharp/Ulid
 
 All three libraries use 16 bytes of memory, but they handle the data differently inside.
 
-| Aspect | KairosId | Cysharp/Ulid | System.Guid |
-| :--- | :--- | :--- | :--- |
-| **Tech Used** | Uses native `UInt128` | Uses two `long` fields | Uses four integers |
-| **Simplicity** | Very simple code | Complex for speed | Built into Windows/Core |
-| **Compatibility**| Needs .NET 7 or higher | Works on old .NET | Works everywhere |
+| Aspect | KairosId               | Cysharp/Ulid | System.Guid |
+| :--- |:-----------------------| :--- | :--- |
+| **Tech Used** | Uses native `UInt128`  | Uses two `long` fields | Uses four integers |
+| **Simplicity** | Very simple code       | Complex for speed | Built into Windows/Core |
+| **Compatibility**| Needs .NET 8 or higher | Works on old .NET | Works everywhere |
 
 **Why it matters:** `KairosId` uses modern .NET features (`UInt128`) to keep the code clean and easy to maintain. `Ulid` and `Guid` use older methods to remain compatible with older versions of .NET.
 
@@ -35,6 +35,6 @@ Each ID is made of a **Timestamp** (when it was created) and **Randomness** (to 
 
 ## Summary
 
-- **Choose KairosId** if you want the **shortest possible IDs** and you are using a modern version of .NET (7, 8, or 9+). It is perfect for clean, modern code.
+- **Choose KairosId** if you want the **shortest possible IDs** and you are using a modern version of .NET (8+). It is perfect for clean, modern code.
 - **Choose Ulid** if you need to follow the official ULID standard strictly or need to support very old systems.
 - **Choose System.Guid** if you want to stay with the built-in .NET tools and don't mind the longer 36-character strings.

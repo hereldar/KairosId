@@ -1,6 +1,4 @@
-using System;
 using KairosId.Formats;
-using Xunit;
 
 namespace KairosId.Tests;
 
