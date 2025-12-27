@@ -217,27 +217,41 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
 
     public string ToString(string? format, IFormatProvider? formatProvider)
     {
-        format = string.IsNullOrEmpty(format) ? "B58" : format.ToUpperInvariant();
+        ReadOnlySpan<char> fmt = format;
+        if (fmt.IsEmpty) fmt = "B58";
 
-        switch (format)
+        switch (fmt)
         {
             case "B58":
+            case "b58":
                 return string.Create(18, _value, (span, val) => 
                 {
                     Base58.TryEncode(val, span, out _);
                 });
             case "B32":
+            case "b32":
                  return string.Create(22, _value, (span, val) => 
                 {
                     Base32.TryEncode(val, span, out _);
                 });
             case "B16":
             case "X":
+            {
                 return string.Create(27, _value, (span, val) =>
                 {
-                    Base16.TryEncode(val, span, true, out _); // Default Upper
+                    Base16.TryEncode(val, span, upperCase: true, out _);
                 });
+            }
+            case "b16":
+            case "x":
+            {
+                return string.Create(27, _value, (span, val) =>
+                {
+                    Base16.TryEncode(val, span, upperCase: false, out _);
+                });
+            }
             case "B64":
+            case "b64":
                 return string.Create(18, _value, (span, val) =>
                 {
                     Base64.TryEncode(val, span, out _);
@@ -250,41 +264,34 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
 
     public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
     {
-        // Default B58
         if (format.IsEmpty) format = "B58";
-        
-        char f = char.ToUpperInvariant(format[0]);
-        
-        if (format.Equals("B58", StringComparison.OrdinalIgnoreCase))
+
+        switch (format)
         {
-            return Base58.TryEncode(_value, destination, out charsWritten);
+            case "B58":
+            case "b58":
+                return Base58.TryEncode(_value, destination, out charsWritten);
+            case "B32":
+            case "b32":
+                return Base32.TryEncode(_value, destination, out charsWritten);
+            case "B16":
+            case "X":
+                return Base16.TryEncode(_value, destination, upperCase: true, out charsWritten);
+            case "b16":
+            case "x":
+                return Base16.TryEncode(_value, destination, upperCase: false, out charsWritten);
+            case "B64":
+            case "b64":
+                return Base64.TryEncode(_value, destination, out charsWritten);
+            default:
+                charsWritten = 0;
+                return false;
         }
-
-        if (format.Equals("B32", StringComparison.OrdinalIgnoreCase))
-        {
-            return Base32.TryEncode(_value, destination, out charsWritten);
-        }
-
-        if (format.Equals("B16", StringComparison.OrdinalIgnoreCase) || f == 'X')
-        {
-            // Check if specifically 'x' (lowercase)
-            bool upper = !(format.Length == 1 && format[0] == 'x');
-
-            return Base16.TryEncode(_value, destination, upper, out charsWritten);
-        }
-
-        if (format.Equals("B64", StringComparison.OrdinalIgnoreCase))
-        {
-            return Base64.TryEncode(_value, destination, out charsWritten);
-        }
-
-        charsWritten = 0;
-        return false;
     }
 
     // Explicit Instance Methods for Strings
     public string ToBase58() => ToString("B58");
     public string ToBase32() => ToString("B32");
-    public string ToHex() => ToString("B16");
+    public string ToHex(bool upperCase = true) => ToString(upperCase ? "B16" : "b16");
     public string ToBase64() => ToString("B64");
 }

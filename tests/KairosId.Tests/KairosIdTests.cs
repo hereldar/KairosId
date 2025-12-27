@@ -209,4 +209,28 @@ public class KairosIdTests
         var pastDate = new DateTimeOffset(2019, 12, 31, 23, 59, 59, TimeSpan.Zero);
         Assert.Throws<ArgumentOutOfRangeException>(() => KairosId.NewKairosId(pastDate));
     }
+
+    [Theory]
+    [InlineData("x")]
+    [InlineData("b16")]
+    public void Hex_Formatting_Supports_Lowercase(string format)
+    {
+        var id = KairosId.ParseHex("00000000000ABCDEF1234567890");
+        
+        // ToString
+        Assert.Equal("00000000000abcdef1234567890", id.ToString(format));
+        
+        // TryFormat
+        Span<char> span = stackalloc char[27];
+        Assert.True(id.TryFormat(span, out _, format, null));
+        Assert.Equal("00000000000abcdef1234567890", span.ToString());
+    }
+
+    [Fact]
+    public void ToHex_Supports_Casing()
+    {
+        var id = KairosId.ParseHex("00000000000ABCDEF1234567890");
+        Assert.Equal("00000000000ABCDEF1234567890", id.ToHex(true));
+        Assert.Equal("00000000000abcdef1234567890", id.ToHex(false));
+    }
 }
