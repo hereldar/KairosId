@@ -42,7 +42,7 @@ public class Base16Tests
     [Fact]
     public void TryDecode_ValidUpper_Works()
     {
-        string input = "ABCDEF1234567890";
+        string input = "00000000000ABCDEF1234567890";
         bool success = Base16.TryDecode(input.AsSpan(), out UInt128 result);
 
         Assert.True(success);
@@ -52,7 +52,7 @@ public class Base16Tests
     [Fact]
     public void TryDecode_ValidLower_Works()
     {
-        string input = "abcdef1234567890";
+        string input = "00000000000abcdef1234567890";
         bool success = Base16.TryDecode(input.AsSpan(), out UInt128 result);
 
         Assert.True(success);
@@ -62,7 +62,7 @@ public class Base16Tests
     [Fact]
     public void TryDecode_MixedCase_Works()
     {
-        string input = "AbCdEf1234567890";
+        string input = "00000000000AbCdEf1234567890";
         bool success = Base16.TryDecode(input.AsSpan(), out UInt128 result);
 
         Assert.True(success);

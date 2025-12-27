@@ -83,12 +83,12 @@ public class KairosIdTests
         
         // Hex
         string b16 = id.ToHex();
-        Assert.True(b16.Length >= 27);
+        Assert.Equal(27, b16.Length);
         Assert.Equal(id, KairosId.ParseHex(b16));
         
         // Base64
         string b64 = id.ToBase64();
-        Assert.Equal(24, b64.Length);
+        Assert.Equal(18, b64.Length);
         Assert.Equal(id, KairosId.ParseBase64(b64));
     }
 

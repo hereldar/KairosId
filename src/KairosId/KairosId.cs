@@ -127,18 +127,20 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// </summary>
     public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out KairosId result)
     {
-        // Simple heuristic detection based on length
-        // Base58 length is 18.
-        // Base32 length is 22.
-        // Hex length is 27 (usually) or 32 for full UInt128.
-        // Base64 length is 24.
-        
         // Base58
         if (s.Length == 18)
         {
+             // Try Base58 first as it's the default
              if (Base58.TryDecode(s, out var val))
              {
                  result = new KairosId(val);
+                 return true;
+             }
+             
+             // Try Base64 next if length is 18
+             if (Base64.TryDecode(s, out var b64Val))
+             {
+                 result = new KairosId(b64Val);
                  return true;
              }
         }
@@ -152,19 +154,11 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
             }
         }
         // Hex
-        else if (s.Length == 27 || s.Length == 32)
+        else if (s.Length == 27)
         {
             if (Base16.TryDecode(s, out var val))
             {
                 result = new KairosId(val);
-                return true;
-            }
-        }
-        // Base64 (128 bits -> 16 bytes -> 24 chars with padding)
-        else if (s.Length == 24)
-        {
-            if (TryParseBase64(s, out result))
-            {
                 return true;
             }
         }
@@ -189,19 +183,8 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     public static KairosId ParseBase58(ReadOnlySpan<char> s) => Base58.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base58");
     public static KairosId ParseBase32(ReadOnlySpan<char> s) => Base32.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base32");
     public static KairosId ParseHex(ReadOnlySpan<char> s) => Base16.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Hex");
-    public static KairosId ParseBase64(ReadOnlySpan<char> s) => TryParseBase64(s, out var v) ? v : throw new FormatException("Invalid Base64");
+    public static KairosId ParseBase64(ReadOnlySpan<char> s) => Base64.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base64");
 
-    private static bool TryParseBase64(ReadOnlySpan<char> s, out KairosId result)
-    {
-        Span<byte> bytes = stackalloc byte[16];
-        if (Convert.TryFromBase64Chars(s, bytes, out int bytesWritten) && bytesWritten == 16)
-        {
-            result = new KairosId(System.Buffers.Binary.BinaryPrimitives.ReadUInt128BigEndian(bytes));
-            return true;
-        }
-        result = default;
-        return false;
-    }
 
     // Equality
     public bool Equals(KairosId other) => _value == other._value;
@@ -255,12 +238,9 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
                     Base16.TryEncode(val, span, true, out _); // Default Upper
                 });
             case "B64":
-                // 128 bit = 16 bytes. Base64 is 4 chars per 3 bytes. 16/3 = 5.33 -> 6 blocks -> 24 chars.
-                return string.Create(24, _value, (span, val) =>
+                return string.Create(18, _value, (span, val) =>
                 {
-                    Span<byte> bytes = stackalloc byte[16];
-                    System.Buffers.Binary.BinaryPrimitives.WriteUInt128BigEndian(bytes, val);
-                    Convert.TryToBase64Chars(bytes, span, out _);
+                    Base64.TryEncode(val, span, out _);
                 });
                 
             default:
@@ -295,11 +275,7 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
 
         if (format.Equals("B64", StringComparison.OrdinalIgnoreCase))
         {
-            // Span-based Base64?
-            // Need bytes first.
-            Span<byte> bytes = stackalloc byte[16];
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt128BigEndian(bytes, _value);
-            return Convert.TryToBase64Chars(bytes, destination, out charsWritten);
+            return Base64.TryEncode(_value, destination, out charsWritten);
         }
 
         charsWritten = 0;

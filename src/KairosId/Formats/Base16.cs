@@ -27,13 +27,9 @@ internal static class Base16
     {
         // KairosId is 106 bits.
         // 106 bits / 4 bits per hex char = 26.5 chars -> 27 chars.
-        // Let's output 27 chars to be safe/consistent with "X27" formatting, 
-        // OR we could do 32 chars (full UInt128) and trim leading zeros if desired.
-        // The previous implementation used "X27".
+        // We output 27 chars to be consistent with the identifier size.
         
-        // We will target 27 characters (padding with 0 if needed for the top bits).
-        
-        int length = 27;
+        const int length = 27;
         if (destination.Length < length)
         {
             charsWritten = 0;
@@ -41,9 +37,6 @@ internal static class Base16
         }
 
         char[] table = upperCase ? HexTableUpper : HexTableLower;
-        
-        // We process 4 bits at a time from properties of value.
-        // Unrolling slightly for performance.
         
         var v = value;
         for (int i = length - 1; i >= 0; i--)
@@ -58,20 +51,8 @@ internal static class Base16
 
     public static bool TryDecode(ReadOnlySpan<char> source, out UInt128 result)
     {
-        // We allow variable length parsing essentially, but for KairosId strictness
-        // we might usually expect 27 or 32 chars.
-        // Let's implement a generic hex parser for UInt128.
-        
         result = 0;
-        if (source.IsEmpty) return false;
-
-        // Skip '0x' if present? (Guid.Parse doesn't usually require it, checking KairosId logic)
-        // KairosId.TryParse checked specific lengths.
-        
-        // We accumulate result.
-        
-        // Check for max 32 chars (128 bits). 
-        if (source.Length > 32) return false; 
+        if (source.Length != 27) return false;
         
         UInt128 acc = 0;
         foreach (char c in source)
