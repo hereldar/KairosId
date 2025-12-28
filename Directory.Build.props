@@ -33,4 +33,17 @@
     <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="\" />
     <None Include="$(MSBuildThisFileDirectory)Icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
+
+  <Target
+    Name="Husky"
+    AfterTargets="Build"
+    Condition="'$(HUSKY)' != 'false' And '$(CI)' != 'true' And '$(GITHUB_ACTIONS)' != 'true' And !Exists('$(MSBuildThisFileDirectory).husky/_/husky.sh')"
+  >
+    <Exec Command="dotnet tool restore" WorkingDirectory="$(MSBuildThisFileDirectory)" StandardOutputImportance="Low" />
+    <Exec
+      Command="dotnet husky install"
+      WorkingDirectory="$(MSBuildThisFileDirectory)"
+      StandardOutputImportance="Low"
+    />
+  </Target>
 </Project>

@@ -107,6 +107,27 @@ Interested in how **KairosId** stacks up against other identifier libraries? Che
 - [**Performance Comparison**](docs/comparison_performance.md): Benchmark results and analysis.
 - [**Implementation Comparison**](docs/comparison_implementation.md): Technical design and structure.
 
+## Development
+
+This project uses **CSharpier** for code formatting and **Husky.Net** for git hooks. 
+
+Before pushing changes, the pre-push hook will automatically format the code and run tests.
+
+### Setup Hooks
+The hooks are automatically installed during the build/restore process via MSBuild. You normally don't need to run anything manually.
+
+If you ever need to manually reinstall them:
+
+```bash
+dotnet tool restore
+dotnet husky install
+```
+
+### Manual Commands
+- **Format code**: `dotnet husky run --name format`
+- **Run tests**: `dotnet husky run --name test`
+- **Run all checks**: `dotnet husky run`
+
 ## Credits
 
 Special thanks to the [**Cysharp/Ulid**](https://github.com/Cysharp/Ulid) library. It served as a vital reference and inspiration for significantly improving the performance of KairosId.
