@@ -100,11 +100,12 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// </summary>
     public static KairosId Parse(string s, IFormatProvider? provider = null)
     {
-        if (!TryParse(s, provider, out var result))
+        if (TryParse(s, provider, out var result))
         {
-            throw new FormatException("Invalid KairosId format.");
+            return result;
         }
-        return result;
+
+        throw new FormatException("Invalid KairosId format.");
     }
 
     /// <summary>
@@ -127,44 +128,21 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// </summary>
     public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out KairosId result)
     {
-        // Base58
-        if (s.Length == 18)
+        switch (s.Length)
         {
-             // Try Base58 first as it's the default
-             if (Base58.TryDecode(s, out var val))
-             {
+            case 18 when Base58.TryDecode(s, out var val):
                  result = new KairosId(val);
                  return true;
-             }
-             
-             // Try Base64 next if length is 18
-             if (Base64.TryDecode(s, out var b64Val))
-             {
-                 result = new KairosId(b64Val);
-                 return true;
-             }
-        }
-        // Base32
-        else if (s.Length == 22)
-        {
-            if (Base32.TryDecode(s, out var val))
-            {
+            case 22 when Base32.TryDecode(s, out var val):
                 result = new KairosId(val);
                 return true;
-            }
-        }
-        // Hex
-        else if (s.Length == 27)
-        {
-            if (Base16.TryDecode(s, out var val))
-            {
+            case 27 when Base16.TryDecode(s, out var val):
                 result = new KairosId(val);
                 return true;
-            }
+            default:
+                result = default;
+                return false;
         }
-        
-        result = default;
-        return false;
     }
 
     /// <summary>
@@ -172,18 +150,18 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// </summary>
     public static KairosId Parse(ReadOnlySpan<char> s, IFormatProvider? provider = null)
     {
-        if (!TryParse(s, provider, out var result))
+        if (TryParse(s, provider, out var result))
         {
-            throw new FormatException("Invalid KairosId format.");
+            return result;
         }
-        return result;
+
+        throw new FormatException("Invalid KairosId format.");
     }
     
     // Explicit parsing methods for clarity
     public static KairosId ParseBase58(ReadOnlySpan<char> s) => Base58.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base58");
     public static KairosId ParseBase32(ReadOnlySpan<char> s) => Base32.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base32");
     public static KairosId ParseHex(ReadOnlySpan<char> s) => Base16.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Hex");
-    public static KairosId ParseBase64(ReadOnlySpan<char> s) => Base64.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base64");
 
 
     // Equality
@@ -250,15 +228,9 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
                     Base16.TryEncode(val, span, upperCase: false, out _);
                 });
             }
-            case "B64":
-            case "b64":
-                return string.Create(18, _value, (span, val) =>
-                {
-                    Base64.TryEncode(val, span, out _);
-                });
                 
             default:
-                throw new FormatException($"Unknown format '{format}'. Supported: B58, B32, B16, B64.");
+                throw new FormatException($"Unknown format '{format}'. Supported: B58, B32, B16.");
         }
     }
 
@@ -280,9 +252,6 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
             case "b16":
             case "x":
                 return Base16.TryEncode(_value, destination, upperCase: false, out charsWritten);
-            case "B64":
-            case "b64":
-                return Base64.TryEncode(_value, destination, out charsWritten);
             default:
                 charsWritten = 0;
                 return false;
@@ -293,5 +262,4 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     public string ToBase58() => ToString("B58");
     public string ToBase32() => ToString("B32");
     public string ToHex(bool upperCase = true) => ToString(upperCase ? "B16" : "b16");
-    public string ToBase64() => ToString("B64");
 }

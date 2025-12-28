@@ -63,7 +63,6 @@ public class KairosIdTests
         Assert.Equal(id.ToString("B58"), id.ToBase58());
         Assert.Equal(id.ToString("B32"), id.ToBase32());
         Assert.Equal(id.ToString("B16"), id.ToHex());
-        Assert.Equal(id.ToString("B64"), id.ToBase64());
     }
 
     [Fact]
@@ -85,11 +84,6 @@ public class KairosIdTests
         string b16 = id.ToHex();
         Assert.Equal(27, b16.Length);
         Assert.Equal(id, KairosId.ParseHex(b16));
-        
-        // Base64
-        string b64 = id.ToBase64();
-        Assert.Equal(18, b64.Length);
-        Assert.Equal(id, KairosId.ParseBase64(b64));
     }
 
     [Fact]
@@ -100,7 +94,6 @@ public class KairosIdTests
         Assert.Equal(id, KairosId.Parse(id.ToBase58()));
         Assert.Equal(id, KairosId.Parse(id.ToBase32()));
         Assert.Equal(id, KairosId.Parse(id.ToHex()));
-        Assert.Equal(id, KairosId.Parse(id.ToBase64()));
     }
 
     [Fact]

@@ -51,7 +51,4 @@ public class IdBenchmarks
 
     [Benchmark]
     public string KairosIdToHex() => KairosId.NewKairosId().ToHex();
-
-    [Benchmark]
-    public string KairosIdToBase64() => KairosId.NewKairosId().ToBase64();
 }

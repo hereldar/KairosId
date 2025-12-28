@@ -42,14 +42,13 @@ The following table summarizes the speed and memory usage of each library on mod
 The speed of `ToString()` depends on the format you choose.
 
 - **Base58 (Default):** Takes about **300 ns**. It is slower because the math for Base58 is complex. However, it gives you the shortest possible string (only 18 characters).
-- **Base32/Base64/Hex:** These are much faster (about **36-40 ns**) because they use simple bit-shifting.
+- **Base32/Hex:** These are much faster (about **36-40 ns**) because they use simple bit-shifting.
 - **Memory:** `KairosId` uses less memory than others when creating strings. It only needs **64 bytes**, while Ulid needs 80 bytes and Guid needs 96 bytes.
 
 | KairosId Format | Mean (Speed) | Allocated |
 | :-------------- | -----------: | --------: |
 | ToBase58 (Default)|   301.02 ns |      64 B |
 | ToBase32        |     36.08 ns |      72 B |
-| ToBase64        |     39.66 ns |      72 B |
 | ToHex           |     40.99 ns |      80 B |
 
 ## 3. Parsing IDs

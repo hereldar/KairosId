@@ -11,7 +11,7 @@
 - **Unique**: 106-bit identifier space (48-bit timestamp + 58-bit randomness).
 - **Compact**: Default Base58 representation is only 18 characters long.
 - **High Performance**: Built with `readonly struct` and `UInt128` (C# 12 / .NET 8) to minimize allocations.
-- **Flexible Formats**: Supports Base58, Base32 (Crockford), Base16 (Hex), and Base64.
+- **Flexible Formats**: Supports Base58, Base32 (Crockford), and Base16 (Hex).
 - **No Dependencies**: Clean, self-contained library.
 
 ## Installation
@@ -43,7 +43,7 @@ KairosId id = KairosId.Parse("your-id-string");
 // Explicit parsing for specific formats
 KairosId idFromHex = KairosId.ParseHex("...");
 KairosId idFromBase32 = KairosId.ParseBase32("...");
-KairosId idFromBase64 = KairosId.ParseBase64("...");
+KairosId idFromBase58 = KairosId.ParseBase58("...");
 ```
 
 ### Explicit Formatting
@@ -56,7 +56,6 @@ var id = KairosId.NewKairosId();
 string b58 = id.ToBase58(); // Default (18 chars)
 string b32 = id.ToBase32(); // Crockford (22 chars)
 string hex = id.ToHex();    // Hexadecimal (27 chars)
-string b64 = id.ToBase64(); // Base64 (24 chars)
 ```
 
 ### Sorting

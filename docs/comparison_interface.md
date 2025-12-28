@@ -21,11 +21,11 @@ How to create a new ID in your application:
 | Feature | KairosId | Cysharp/Ulid | System.Guid |
 | :--- | :--- | :--- | :--- |
 | **Default Text** | Base58 (18 chars) | Base32 (26 chars) | Hex (36 chars) |
-| **Other Formats** | Base32, Hex, Base64 | Base32 only | Various Hex formats |
+| **Other Formats** | Base32, Hex | Base32 only | Various Hex formats |
 | **Reading Text** | `Parse(string)` | `Parse(string)` | `Parse(string)` |
 | **Safe Reading** | `TryParse(string, out id)`| `TryParse(string, out id)`| `TryParse(string, out id)`|
 
-**Key Difference:** `KairosId` makes it easy to switch between different text formats (like Base64 or Hex) using simple methods. `Ulid` and `Guid` are mostly stuck with their one standard format.
+**Key Difference:** `KairosId` makes it easy to switch between different text formats (like Base32 or Hex) using simple methods. `Ulid` and `Guid` are mostly stuck with their one standard format.
 
 ---
 
