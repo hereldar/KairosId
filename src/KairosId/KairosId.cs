@@ -4,18 +4,18 @@ using KairosId.Formats;
 namespace KairosId;
 
 /// <summary>
-/// Represents a 106-bit identifier composed of a 48-bit timestamp and 58-bit randomness.
+/// Represents a 105-bit identifier composed of a 43-bit timestamp and 62-bit randomness.
 /// The identifier is designed to be time-ordered (k-sorted).
 /// Default string representation is Base58 (18 characters).
 /// </summary>
 public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, IParsable<KairosId>, ISpanParsable<KairosId>, ISpanFormattable
 {
-    private const int TimestampBits = 48;
-    private const int RandomBits = 58;
+    private const int TimestampBits = 43;
+    private const int RandomBits = 62;
     private const long EpochTimestamp = 1577836800000; // Jan 1 2020 UTC in ms
 
     // The internal 128-bit storage.
-    // Layout (Big Endian conceptual view): [00...00 (22 bits)] [Timestamp (48 bits)] [Random (58 bits)]
+    // Layout (Big Endian conceptual view): [00...00 (23 bits)] [Timestamp (43 bits)] [Random (62 bits)]
     private readonly UInt128 _value;
 
     /// <summary>
@@ -35,7 +35,7 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     {
         get
         {
-            // Shift down 58 bits to get timestamp
+            // Shift down 62 bits to get timestamp
             long timestampOffset = (long)(_value >> RandomBits);
             return DateTimeOffset.FromUnixTimeMilliseconds(timestampOffset + EpochTimestamp);
         }
@@ -75,7 +75,7 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
             throw new ArgumentOutOfRangeException(nameof(timestamp), "Timestamp too far in the future.");
         }
 
-        // Generate 58 bits of randomness
+        // Generate 62 bits of randomness
         Span<byte> randomBytes = stackalloc byte[8];
         
         // Use Random.Shared for performance (userspace PRNG)
@@ -84,12 +84,12 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
         
         ulong random64 = BitConverter.ToUInt64(randomBytes);
         
-        // Take lower 58 bits
+        // Take lower 57 bits
         UInt128 randomPart = random64 & ((1UL << RandomBits) - 1);
         
         UInt128 timestampPart = (UInt128)msSinceEpoch;
         
-        // Combine: (Timestamp << 58) | Random
+        // Combine: (Timestamp << 62) | Random
         UInt128 combined = (timestampPart << RandomBits) | randomPart;
         
         return new KairosId(combined);
@@ -131,8 +131,8 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
         switch (s.Length)
         {
             case 18 when Base58.TryDecode(s, out var val):
-                 result = new KairosId(val);
-                 return true;
+                result = new KairosId(val);
+                return true;
             case 22 when Base32.TryDecode(s, out var val):
                 result = new KairosId(val);
                 return true;
