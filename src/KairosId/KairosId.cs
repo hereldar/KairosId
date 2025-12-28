@@ -97,7 +97,7 @@ public readonly struct KairosId
 
         ulong random64 = BitConverter.ToUInt64(randomBytes);
 
-        // Take lower 57 bits
+        // Take lower 62 bits
         UInt128 randomPart = random64 & ((1UL << RandomBits) - 1);
 
         UInt128 timestampPart = (UInt128)msSinceEpoch;

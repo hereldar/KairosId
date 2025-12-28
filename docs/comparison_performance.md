@@ -18,15 +18,15 @@ The following table summarizes the speed and memory usage of each library on mod
 
 | Method           | Mean (Speed) | Ratio | Allocated Memory |
 | :--------------- | -----------: | ----: | ---------------: |
-| **NewKairosId**  |  **21.67 ns** |  0.12 |          **0 B** |
-| NewUlid          |     19.45 ns |  0.10 |              0 B |
-| NewGuid          |    185.51 ns |  1.00 |              0 B |
-| **KairosIdToString (Base58)** | **330.57 ns** | 1.78 | **64 B** |
-| UlidToString (Base32) | 35.80 ns | 0.19 | 80 B |
-| GuidToString (Hex) | 198.91 ns | 1.07 | 96 B |
-| **ParseKairosId** | **17.83 ns** | 0.10 | **0 B** |
-| ParseUlid        |      7.10 ns| 0.04 | 0 B |
-| ParseGuid        |      8.63 ns| 0.05 | 0 B |
+| **NewKairosId**  |  **19.94 ns** |  0.11 |          **0 B** |
+| NewUlid          |     19.13 ns |  0.10 |              0 B |
+| NewGuid          |    183.61 ns |  1.00 |              0 B |
+| **KairosIdToString (Base58)** | **81.34 ns** | 0.44 | **64 B** |
+| UlidToString (Base32) | 33.98 ns | 0.19 | 80 B |
+| GuidToString (Hex) | 195.19 ns | 1.06 | 96 B |
+| **ParseKairosId** | **11.09 ns** | 0.06 | **0 B** |
+| ParseUlid        |      6.92 ns| 0.04 | 0 B |
+| ParseGuid        |      8.46 ns| 0.05 | 0 B |
 
 ---
 
@@ -41,19 +41,19 @@ The following table summarizes the speed and memory usage of each library on mod
 
 The speed of `ToString()` depends on the format you choose.
 
-- **Base58 (Default):** Takes about **300 ns**. It is slower because the math for Base58 is complex. However, it gives you the shortest possible string (only 18 characters).
-- **Base32/Hex:** These are much faster (about **36-40 ns**) because they use simple bit-shifting.
+- **Base58 (Default):** Takes about **81 ns**. It is 2.4 times faster than Guid's Hex conversion, while providing a much shorter string (only 18 characters).
+- **Base32/Hex:** These are even faster (about **34-37 ns**) because they use simple bit-shifting.
 - **Memory:** `KairosId` uses less memory than others when creating strings. It only needs **64 bytes**, while Ulid needs 80 bytes and Guid needs 96 bytes.
 
 | KairosId Format | Mean (Speed) | Allocated |
 | :-------------- | -----------: | --------: |
-| ToBase58 (Default)|   335.13 ns |      64 B |
-| ToBase32        |     37.48 ns |      72 B |
-| ToHex           |     39.76 ns |      80 B |
+| ToBase58 (Default)|    82.55 ns |      64 B |
+| ToBase32        |    34.10 ns |      72 B |
+| ToHex           |    36.83 ns |      80 B |
 
 ## 3. Parsing IDs
 
-`KairosId` can read (parse) IDs very quickly, taking around **18 ns**. While `Ulid` and `Guid` are slightly faster at parsing, the difference is negligible for most applications.
+`KairosId` can read (parse) IDs very quickly, taking around **11 ns**. While `Ulid` and `Guid` are slightly faster at parsing, the difference is negligible for most applications.
 
 ## Conclusion
 
@@ -61,6 +61,7 @@ The speed of `ToString()` depends on the format you choose.
 1. **Creation:** Extremely fast, matching industry standards.
 2. **Size:** Provides the shortest string representation (Base58).
 3. **Efficiency:** Lowest memory usage when converting to text.
+4. **Performance:** Optimized Base58 logic makes it faster than even standard Hex conversions of other IDs.
 
 If you need the absolute highest speed for text conversion, you can use `ToBase32()` instead of the default `ToString()`.
 
