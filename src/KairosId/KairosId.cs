@@ -8,7 +8,12 @@ namespace KairosId;
 /// The identifier is designed to be time-ordered (k-sorted).
 /// Default string representation is Base58 (18 characters).
 /// </summary>
-public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, IParsable<KairosId>, ISpanParsable<KairosId>, ISpanFormattable
+public readonly struct KairosId
+    : IEquatable<KairosId>,
+        IComparable<KairosId>,
+        IParsable<KairosId>,
+        ISpanParsable<KairosId>,
+        ISpanFormattable
 {
     private const int TimestampBits = 43;
     private const int RandomBits = 62;
@@ -37,7 +42,9 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
         {
             // Shift down 62 bits to get timestamp
             long timestampOffset = (long)(_value >> RandomBits);
-            return DateTimeOffset.FromUnixTimeMilliseconds(timestampOffset + EpochTimestamp);
+            return DateTimeOffset.FromUnixTimeMilliseconds(
+                timestampOffset + EpochTimestamp
+            );
         }
     }
 
@@ -66,32 +73,38 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
 
         if (msSinceEpoch < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(timestamp), "Timestamp must be after Jan 1 2020.");
+            throw new ArgumentOutOfRangeException(
+                nameof(timestamp),
+                "Timestamp must be after Jan 1 2020."
+            );
         }
-        
+
         // 48 bits check
         if (msSinceEpoch >= (1L << TimestampBits))
         {
-            throw new ArgumentOutOfRangeException(nameof(timestamp), "Timestamp too far in the future.");
+            throw new ArgumentOutOfRangeException(
+                nameof(timestamp),
+                "Timestamp too far in the future."
+            );
         }
 
         // Generate 62 bits of randomness
         Span<byte> randomBytes = stackalloc byte[8];
-        
+
         // Use Random.Shared for performance (userspace PRNG)
         // This is significantly faster than RandomNumberGenerator.
         Random.Shared.NextBytes(randomBytes);
-        
+
         ulong random64 = BitConverter.ToUInt64(randomBytes);
-        
+
         // Take lower 57 bits
         UInt128 randomPart = random64 & ((1UL << RandomBits) - 1);
-        
+
         UInt128 timestampPart = (UInt128)msSinceEpoch;
-        
+
         // Combine: (Timestamp << 62) | Random
         UInt128 combined = (timestampPart << RandomBits) | randomPart;
-        
+
         return new KairosId(combined);
     }
 
@@ -101,9 +114,7 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     public static KairosId Parse(string s, IFormatProvider? provider = null)
     {
         if (TryParse(s, provider, out var result))
-        {
             return result;
-        }
 
         throw new FormatException("Invalid KairosId format.");
     }
@@ -112,7 +123,11 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// Tries to parse a string into a KairosId.
     /// Detects format based on length/content or assumes Base58.
     /// </summary>
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out KairosId result)
+    public static bool TryParse(
+        [NotNullWhen(true)] string? s,
+        IFormatProvider? provider,
+        out KairosId result
+    )
     {
         if (s is null)
         {
@@ -126,7 +141,11 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     /// <summary>
     /// Tries to parse a span of characters into a KairosId.
     /// </summary>
-    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out KairosId result)
+    public static bool TryParse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider,
+        out KairosId result
+    )
     {
         switch (s.Length)
         {
@@ -151,32 +170,52 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     public static KairosId Parse(ReadOnlySpan<char> s, IFormatProvider? provider = null)
     {
         if (TryParse(s, provider, out var result))
-        {
             return result;
-        }
 
         throw new FormatException("Invalid KairosId format.");
     }
-    
-    // Explicit parsing methods for clarity
-    public static KairosId ParseBase58(ReadOnlySpan<char> s) => Base58.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base58");
-    public static KairosId ParseBase32(ReadOnlySpan<char> s) => Base32.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Base32");
-    public static KairosId ParseHex(ReadOnlySpan<char> s) => Base16.TryDecode(s, out var v) ? new KairosId(v) : throw new FormatException("Invalid Hex");
 
+    // Explicit parsing methods for clarity
+    public static KairosId ParseBase58(ReadOnlySpan<char> s) =>
+        Base58.TryDecode(s, out var v)
+            ? new KairosId(v)
+            : throw new FormatException("Invalid Base58");
+
+    public static KairosId ParseBase32(ReadOnlySpan<char> s) =>
+        Base32.TryDecode(s, out var v)
+            ? new KairosId(v)
+            : throw new FormatException("Invalid Base32");
+
+    public static KairosId ParseHex(ReadOnlySpan<char> s) =>
+        Base16.TryDecode(s, out var v)
+            ? new KairosId(v)
+            : throw new FormatException("Invalid Hex");
 
     // Equality
     public bool Equals(KairosId other) => _value == other._value;
+
     public override bool Equals(object? obj) => obj is KairosId other && Equals(other);
+
     public override int GetHashCode() => _value.GetHashCode();
+
     public static bool operator ==(KairosId left, KairosId right) => left.Equals(right);
+
     public static bool operator !=(KairosId left, KairosId right) => !left.Equals(right);
 
     // Comparable
     public int CompareTo(KairosId other) => _value.CompareTo(other._value);
-    public static bool operator <(KairosId left, KairosId right) => left.CompareTo(right) < 0;
-    public static bool operator <=(KairosId left, KairosId right) => left.CompareTo(right) <= 0;
-    public static bool operator >(KairosId left, KairosId right) => left.CompareTo(right) > 0;
-    public static bool operator >=(KairosId left, KairosId right) => left.CompareTo(right) >= 0;
+
+    public static bool operator <(KairosId left, KairosId right) =>
+        left.CompareTo(right) < 0;
+
+    public static bool operator <=(KairosId left, KairosId right) =>
+        left.CompareTo(right) <= 0;
+
+    public static bool operator >(KairosId left, KairosId right) =>
+        left.CompareTo(right) > 0;
+
+    public static bool operator >=(KairosId left, KairosId right) =>
+        left.CompareTo(right) >= 0;
 
     /// <summary>
     /// Returns a 16-element byte array that contains the value of this instance.
@@ -196,47 +235,72 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
     public string ToString(string? format, IFormatProvider? formatProvider)
     {
         ReadOnlySpan<char> fmt = format;
-        if (fmt.IsEmpty) fmt = "B58";
+        if (fmt.IsEmpty)
+            fmt = "B58";
 
         switch (fmt)
         {
             case "B58":
             case "b58":
-                return string.Create(18, _value, (span, val) => 
-                {
-                    Base58.TryEncode(val, span, out _);
-                });
+                return string.Create(
+                    18,
+                    _value,
+                    (span, val) =>
+                    {
+                        Base58.TryEncode(val, span, out _);
+                    }
+                );
             case "B32":
             case "b32":
-                 return string.Create(22, _value, (span, val) => 
-                {
-                    Base32.TryEncode(val, span, out _);
-                });
+                return string.Create(
+                    22,
+                    _value,
+                    (span, val) =>
+                    {
+                        Base32.TryEncode(val, span, out _);
+                    }
+                );
             case "B16":
             case "X":
             {
-                return string.Create(27, _value, (span, val) =>
-                {
-                    Base16.TryEncode(val, span, upperCase: true, out _);
-                });
+                return string.Create(
+                    27,
+                    _value,
+                    (span, val) =>
+                    {
+                        Base16.TryEncode(val, span, upperCase: true, out _);
+                    }
+                );
             }
             case "b16":
             case "x":
             {
-                return string.Create(27, _value, (span, val) =>
-                {
-                    Base16.TryEncode(val, span, upperCase: false, out _);
-                });
+                return string.Create(
+                    27,
+                    _value,
+                    (span, val) =>
+                    {
+                        Base16.TryEncode(val, span, upperCase: false, out _);
+                    }
+                );
             }
-                
+
             default:
-                throw new FormatException($"Unknown format '{format}'. Supported: B58, B32, B16.");
+                throw new FormatException(
+                    $"Unknown format '{format}'. Supported: B58, B32, B16."
+                );
         }
     }
 
-    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    public bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider
+    )
     {
-        if (format.IsEmpty) format = "B58";
+        if (format.IsEmpty)
+            format = "B58";
 
         switch (format)
         {
@@ -248,10 +312,20 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
                 return Base32.TryEncode(_value, destination, out charsWritten);
             case "B16":
             case "X":
-                return Base16.TryEncode(_value, destination, upperCase: true, out charsWritten);
+                return Base16.TryEncode(
+                    _value,
+                    destination,
+                    upperCase: true,
+                    out charsWritten
+                );
             case "b16":
             case "x":
-                return Base16.TryEncode(_value, destination, upperCase: false, out charsWritten);
+                return Base16.TryEncode(
+                    _value,
+                    destination,
+                    upperCase: false,
+                    out charsWritten
+                );
             default:
                 charsWritten = 0;
                 return false;
@@ -260,6 +334,8 @@ public readonly struct KairosId : IEquatable<KairosId>, IComparable<KairosId>, I
 
     // Explicit Instance Methods for Strings
     public string ToBase58() => ToString("B58");
+
     public string ToBase32() => ToString("B32");
+
     public string ToHex(bool upperCase = true) => ToString(upperCase ? "B16" : "b16");
 }

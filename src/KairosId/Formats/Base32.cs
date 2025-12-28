@@ -20,7 +20,7 @@ internal static class Base32
                 DecodeMap[char.ToLower(c)] = (byte)i;
             }
         }
-        
+
         // Handle aliases (O=0, I=1, L=1) commonly used in Crockford's
         DecodeMap['O'] = 0;
         DecodeMap['o'] = 0;
@@ -30,7 +30,11 @@ internal static class Base32
         DecodeMap['l'] = 1;
     }
 
-    public static bool TryEncode(UInt128 value, Span<char> destination, out int charsWritten)
+    public static bool TryEncode(
+        UInt128 value,
+        Span<char> destination,
+        out int charsWritten
+    )
     {
         if (destination.Length < 22)
         {
@@ -39,11 +43,11 @@ internal static class Base32
         }
 
         // Unrolled for 22 characters (106 bits covers ~21.2 chars, so 22 is correct padding)
-        // 5 bits per char. 
+        // 5 bits per char.
         // We act on the value directly.
         // To be consistent with the loop `remainder = target & 31; target >>>= 5; dest[len - 1 - i] = x`
         // checks from right to left (Least Significant 5 bits -> Last char).
-        
+
         // char 21 (last)
         destination[21] = AlphabetArray[(int)(value & 31)];
         value >>>= 5;
@@ -128,23 +132,23 @@ internal static class Base32
         // We'll trust the DecodeMap returns 255 for invalid.
         // But verifying *every* char is expensive if we do branches.
         // OR'ing the results and checking at the end is faster, but we need to check 255.
-        // Since 255 has high bit set (0xFF), if OR'd together, we might detect it? 
+        // Since 255 has high bit set (0xFF), if OR'd together, we might detect it?
         // 5 bits max is 31 (0x1F). So 0xFF is distinguishable.
-        
+
         // Let's do a safe unroll.
-        
+
         // char 0 -> top bits.
         // char 21 -> bottom bits.
 
         // We accumulate into UInt128.
         // Since we are shifting 5 bits at a time.
         // result = (result << 5) | val;
-        
+
         // Parallel construction:
-        // (val0 << 105) | (val1 << 100) ... 
-        
+        // (val0 << 105) | (val1 << 100) ...
+
         // Let's load them to local vars to avoid bounds checks if JIT doesn't elide them (it should for fixed length).
-        
+
         byte c0 = DecodeMap[source[0]];
         byte c1 = DecodeMap[source[1]];
         byte c2 = DecodeMap[source[2]];
@@ -169,37 +173,61 @@ internal static class Base32
         byte c21 = DecodeMap[source[21]];
 
         // If any is 255, fail.
-        if ((c0 | c1 | c2 | c3 | c4 | c5 | c6 | c7 | c8 | c9 | c10 | 
-             c11 | c12 | c13 | c14 | c15 | c16 | c17 | c18 | c19 | c20 | c21) == 255)
+        if (
+            (
+                c0
+                | c1
+                | c2
+                | c3
+                | c4
+                | c5
+                | c6
+                | c7
+                | c8
+                | c9
+                | c10
+                | c11
+                | c12
+                | c13
+                | c14
+                | c15
+                | c16
+                | c17
+                | c18
+                | c19
+                | c20
+                | c21
+            ) == 255
+        )
         {
             result = 0;
             return false;
         }
 
-        result = 
-            ((UInt128)c0 << 105) |
-            ((UInt128)c1 << 100) |
-            ((UInt128)c2 << 95) |
-            ((UInt128)c3 << 90) |
-            ((UInt128)c4 << 85) |
-            ((UInt128)c5 << 80) |
-            ((UInt128)c6 << 75) |
-            ((UInt128)c7 << 70) |
-            ((UInt128)c8 << 65) |
-            ((UInt128)c9 << 60) |
-            ((UInt128)c10 << 55) |
-            ((UInt128)c11 << 50) |
-            ((UInt128)c12 << 45) |
-            ((UInt128)c13 << 40) |
-            ((UInt128)c14 << 35) |
-            ((UInt128)c15 << 30) |
-            ((UInt128)c16 << 25) |
-            ((UInt128)c17 << 20) |
-            ((UInt128)c18 << 15) |
-            ((UInt128)c19 << 10) |
-            ((UInt128)c20 << 5) |
-            ((UInt128)c21);
-            
+        result =
+            ((UInt128)c0 << 105)
+            | ((UInt128)c1 << 100)
+            | ((UInt128)c2 << 95)
+            | ((UInt128)c3 << 90)
+            | ((UInt128)c4 << 85)
+            | ((UInt128)c5 << 80)
+            | ((UInt128)c6 << 75)
+            | ((UInt128)c7 << 70)
+            | ((UInt128)c8 << 65)
+            | ((UInt128)c9 << 60)
+            | ((UInt128)c10 << 55)
+            | ((UInt128)c11 << 50)
+            | ((UInt128)c12 << 45)
+            | ((UInt128)c13 << 40)
+            | ((UInt128)c14 << 35)
+            | ((UInt128)c15 << 30)
+            | ((UInt128)c16 << 25)
+            | ((UInt128)c17 << 20)
+            | ((UInt128)c18 << 15)
+            | ((UInt128)c19 << 10)
+            | ((UInt128)c20 << 5)
+            | ((UInt128)c21);
+
         return true;
     }
 }

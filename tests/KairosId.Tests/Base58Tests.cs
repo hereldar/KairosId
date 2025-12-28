@@ -62,7 +62,7 @@ public class Base58Tests
         UInt128 value = 0xABCDEF1234567890;
         Span<char> destination = stackalloc char[18];
         Base58.TryEncode(value, destination, out _);
-        
+
         bool success = Base58.TryDecode(destination, out UInt128 result);
         Assert.True(success);
         Assert.Equal(value, result);

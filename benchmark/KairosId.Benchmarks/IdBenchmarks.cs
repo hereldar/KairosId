@@ -1,6 +1,6 @@
+using System;
 using BenchmarkDotNet.Attributes;
 using KairosId;
-using System;
 
 namespace KairosId.Benchmarks;
 

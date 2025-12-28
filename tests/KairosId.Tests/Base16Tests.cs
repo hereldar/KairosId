@@ -102,7 +102,7 @@ public class Base16Tests
         UInt128 value = 0x1234567890ABCDEF;
         Span<char> destination = stackalloc char[27];
         Base16.TryEncode(value, destination, true, out _);
-        
+
         bool success = Base16.TryDecode(destination, out UInt128 result);
         Assert.True(success);
         Assert.Equal(value, result);

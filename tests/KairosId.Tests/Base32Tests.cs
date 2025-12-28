@@ -82,7 +82,7 @@ public class Base32Tests
         UInt128 value = 0x9876543210FEDCBA;
         Span<char> destination = stackalloc char[22];
         Base32.TryEncode(value, destination, out _);
-        
+
         bool success = Base32.TryDecode(destination, out UInt128 result);
         Assert.True(success);
         Assert.Equal(value, result);
