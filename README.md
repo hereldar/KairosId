@@ -109,7 +109,7 @@ Interested in how **KairosId** stacks up against other identifier libraries? Che
 
 This project uses **CSharpier** for code formatting and **Husky.Net** for git hooks. 
 
-Before pushing changes, the pre-push hook will automatically format the code and run tests.
+Before pushing changes, the pre-push hook will automatically check the code formatting and run tests. if the code is not formatted, the push will be interrupted.
 
 ### Setup Hooks
 The hooks are automatically installed during the build/restore process via MSBuild. You normally don't need to run anything manually.
@@ -122,9 +122,9 @@ dotnet husky install
 ```
 
 ### Manual Commands
-- **Format code**: `dotnet husky run --name format`
-- **Run tests**: `dotnet husky run --name test`
-- **Run all checks**: `dotnet husky run`
+- **Format code**: `make format`
+- **Run tests**: `make tests`
+- **Run benchmarks**: `make benchmarks`
 
 ## Credits
 
