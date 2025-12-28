@@ -2,7 +2,8 @@ namespace KairosId.Formats;
 
 internal static class Base58
 {
-    private const string Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    private const string Alphabet =
+        "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
     private static readonly char[] AlphabetArray = Alphabet.ToCharArray();
     private static readonly byte[] DecodeMap = new byte[128];
     private static readonly UInt128[] PowersOf58 = new UInt128[18];
@@ -40,7 +41,7 @@ internal static class Base58
         }
 
         // Block-based encoding using 58^10 to allow fast 64-bit logic
-        
+
         // Pass 1: Handle the lower 10 characters (Least Significant)
         UInt128 q = value / Divisor58Pow10;
         ulong r = (ulong)(value % Divisor58Pow10);
@@ -54,7 +55,12 @@ internal static class Base58
         return true;
     }
 
-    private static void EncodeBlock(ulong value, Span<char> buffer, int endIndex, int count)
+    private static void EncodeBlock(
+        ulong value,
+        Span<char> buffer,
+        int endIndex,
+        int count
+    )
     {
         var v = value;
         for (int i = 0; i < count; i++)
@@ -76,24 +82,42 @@ internal static class Base58
         // Unrolled decoding using precomputed powers
         UInt128 acc = 0;
 
-        if (!TryAdd(source[0], 17, ref acc)) return false;
-        if (!TryAdd(source[1], 16, ref acc)) return false;
-        if (!TryAdd(source[2], 15, ref acc)) return false;
-        if (!TryAdd(source[3], 14, ref acc)) return false;
-        if (!TryAdd(source[4], 13, ref acc)) return false;
-        if (!TryAdd(source[5], 12, ref acc)) return false;
-        if (!TryAdd(source[6], 11, ref acc)) return false;
-        if (!TryAdd(source[7], 10, ref acc)) return false;
-        if (!TryAdd(source[8], 9, ref acc)) return false;
-        if (!TryAdd(source[9], 8, ref acc)) return false;
-        if (!TryAdd(source[10], 7, ref acc)) return false;
-        if (!TryAdd(source[11], 6, ref acc)) return false;
-        if (!TryAdd(source[12], 5, ref acc)) return false;
-        if (!TryAdd(source[13], 4, ref acc)) return false;
-        if (!TryAdd(source[14], 3, ref acc)) return false;
-        if (!TryAdd(source[15], 2, ref acc)) return false;
-        if (!TryAdd(source[16], 1, ref acc)) return false;
-        if (!TryAdd(source[17], 0, ref acc)) return false;
+        if (!TryAdd(source[0], 17, ref acc))
+            return false;
+        if (!TryAdd(source[1], 16, ref acc))
+            return false;
+        if (!TryAdd(source[2], 15, ref acc))
+            return false;
+        if (!TryAdd(source[3], 14, ref acc))
+            return false;
+        if (!TryAdd(source[4], 13, ref acc))
+            return false;
+        if (!TryAdd(source[5], 12, ref acc))
+            return false;
+        if (!TryAdd(source[6], 11, ref acc))
+            return false;
+        if (!TryAdd(source[7], 10, ref acc))
+            return false;
+        if (!TryAdd(source[8], 9, ref acc))
+            return false;
+        if (!TryAdd(source[9], 8, ref acc))
+            return false;
+        if (!TryAdd(source[10], 7, ref acc))
+            return false;
+        if (!TryAdd(source[11], 6, ref acc))
+            return false;
+        if (!TryAdd(source[12], 5, ref acc))
+            return false;
+        if (!TryAdd(source[13], 4, ref acc))
+            return false;
+        if (!TryAdd(source[14], 3, ref acc))
+            return false;
+        if (!TryAdd(source[15], 2, ref acc))
+            return false;
+        if (!TryAdd(source[16], 1, ref acc))
+            return false;
+        if (!TryAdd(source[17], 0, ref acc))
+            return false;
 
         result = acc;
         return true;
@@ -101,10 +125,12 @@ internal static class Base58
 
     private static bool TryAdd(char c, int powerIndex, ref UInt128 acc)
     {
-        if (c >= 128) return false;
+        if (c >= 128)
+            return false;
         byte val = DecodeMap[c];
-        if (val == 255) return false;
-        
+        if (val == 255)
+            return false;
+
         acc += (UInt128)val * PowersOf58[powerIndex];
         return true;
     }
