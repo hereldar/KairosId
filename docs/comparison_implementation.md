@@ -20,10 +20,10 @@ Each ID is made of a **Timestamp** (when it was created) and **Randomness** (to 
 
 | Component | KairosId | Cysharp/Ulid | System.Guid (v7) |
 | :--- | :--- | :--- | :--- |
-| **Timestamp** | 48 bits (ms) | 48 bits (ms) | 48 bits (ms) |
+| **Timestamp** | 43 bits (ms) | 48 bits (ms) | 48 bits (ms) |
 | **Date Starts At**| **Jan 1, 2020** | Jan 1, 1970 | Jan 1, 1970 |
-| **Max Uniqueness**| 58 random bits | 80 random bits | 74 random bits |
-| **Empty Space** | 22 bits | 0 bits | 6 bits |
+| **Max Uniqueness**| 62 random bits | 80 random bits | 74 random bits |
+| **Empty Space** | 23 bits | 0 bits | 6 bits |
 
 **The KairosId Advantage:** By starting our "clock" at the year 2020 instead of 1970, we can fit the ID into a much smaller string (18 characters) without losing accuracy.
 

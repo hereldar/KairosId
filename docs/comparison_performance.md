@@ -18,15 +18,15 @@ The following table summarizes the speed and memory usage of each library on mod
 
 | Method           | Mean (Speed) | Ratio | Allocated Memory |
 | :--------------- | -----------: | ----: | ---------------: |
-| **NewKairosId**  |  **22.27 ns** |  0.12 |          **0 B** |
-| NewUlid          |     20.02 ns |  0.11 |              0 B |
-| NewGuid          |    184.02 ns |  1.00 |              0 B |
-| **KairosIdToString (Base58)** | **299.80 ns** | 1.63 | **64 B** |
-| UlidToString (Base32) | 36.25 ns | 0.20 | 80 B |
-| GuidToString (Hex) | 203.99 ns | 1.11 | 96 B |
-| **ParseKairosId** | **17.78 ns** | 0.10 | **0 B** |
-| ParseUlid        |      6.96 ns| 0.04 | 0 B |
-| ParseGuid        |      8.58 ns| 0.05 | 0 B |
+| **NewKairosId**  |  **21.67 ns** |  0.12 |          **0 B** |
+| NewUlid          |     19.45 ns |  0.10 |              0 B |
+| NewGuid          |    185.51 ns |  1.00 |              0 B |
+| **KairosIdToString (Base58)** | **330.57 ns** | 1.78 | **64 B** |
+| UlidToString (Base32) | 35.80 ns | 0.19 | 80 B |
+| GuidToString (Hex) | 198.91 ns | 1.07 | 96 B |
+| **ParseKairosId** | **17.83 ns** | 0.10 | **0 B** |
+| ParseUlid        |      7.10 ns| 0.04 | 0 B |
+| ParseGuid        |      8.63 ns| 0.05 | 0 B |
 
 ---
 
@@ -47,9 +47,9 @@ The speed of `ToString()` depends on the format you choose.
 
 | KairosId Format | Mean (Speed) | Allocated |
 | :-------------- | -----------: | --------: |
-| ToBase58 (Default)|   301.02 ns |      64 B |
-| ToBase32        |     36.08 ns |      72 B |
-| ToHex           |     40.99 ns |      80 B |
+| ToBase58 (Default)|   335.13 ns |      64 B |
+| ToBase32        |     37.48 ns |      72 B |
+| ToHex           |     39.76 ns |      80 B |
 
 ## 3. Parsing IDs
 

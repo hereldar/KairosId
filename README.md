@@ -8,7 +8,7 @@
 ## Features
 
 - **Time-Ordered**: IDs are sortable by creation time.
-- **Unique**: 106-bit identifier space (48-bit timestamp + 58-bit randomness).
+- **Unique**: 105-bit identifier space (43-bit timestamp + 62-bit randomness).
 - **Compact**: Default Base58 representation is only 18 characters long.
 - **High Performance**: Built with `readonly struct` and `UInt128` (C# 12 / .NET 8) to minimize allocations.
 - **Flexible Formats**: Supports Base58, Base32 (Crockford), and Base16 (Hex).
@@ -91,11 +91,9 @@ public readonly record struct ProductId(KairosId Value)
 public void ProcessOrder(CustomerId customerId, ProductId productId) { ... }
 ```
 
-## How It Works
-
-**KairosId** uses a 106-bit structure packing:
-- **Timestamp (48 bits)**: High bits. Milliseconds since Jan 1, 2020.
-- **Randomness (58 bits)**: Low bits. Fast pseudo-random values (`Random.Shared`).
+**KairosId** uses a 105-bit structure packing:
+- **Timestamp (43 bits)**: High bits. Milliseconds since Jan 1, 2020.
+- **Randomness (62 bits)**: Low bits. Fast pseudo-random values (`Random.Shared`).
 
 This structure ensures that IDs generated later will numerically be larger than earlier IDs (monotonicity), while providing sufficient collision resistance for distributed systems.
 
