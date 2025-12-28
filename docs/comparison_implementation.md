@@ -38,3 +38,7 @@ Each ID is made of a **Timestamp** (when it was created) and **Randomness** (to 
 - **Choose KairosId** if you want the **shortest possible IDs** and you are using a modern version of .NET (8+). It is perfect for clean, modern code.
 - **Choose Ulid** if you need to follow the official ULID standard strictly or need to support very old systems.
 - **Choose System.Guid** if you want to stay with the built-in .NET tools and don't mind the longer 36-character strings.
+
+---
+
+[**← Back to README**](../README.md)

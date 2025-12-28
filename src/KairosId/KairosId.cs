@@ -11,7 +11,6 @@ namespace KairosId;
 public readonly struct KairosId
     : IEquatable<KairosId>,
         IComparable<KairosId>,
-        IParsable<KairosId>,
         ISpanParsable<KairosId>,
         ISpanFormattable
 {

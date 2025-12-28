@@ -12,8 +12,6 @@ How to create a new ID in your application:
 | **From Date** | `NewKairosId(DateTimeOffset)` | `NewUlid(DateTimeOffset)`| `Guid.CreateVersion7(DateTimeOffset)` |
 | **Custom Random** | Internal only | `NewUlid(DateTimeOffset, byte[])` | `new Guid(byte[])` |
 
----
-
 ## 2. Converting and Reading Text
 
 `KairosId` is flexible and supports many text formats by default.
@@ -27,8 +25,6 @@ How to create a new ID in your application:
 
 **Key Difference:** `KairosId` makes it easy to switch between different text formats (like Base32 or Hex) using simple methods. `Ulid` and `Guid` are mostly stuck with their one standard format.
 
----
-
 ## 3. Getting Data from the ID
 
 What information can you get out of an existing ID?
@@ -39,8 +35,6 @@ What information can you get out of an existing ID?
 | **Raw Value** | `Value` (UInt128) | `ToByteArray()` | `ToByteArray()` |
 
 **Key Difference:** `KairosId` gives you direct access to the `UInt128` value, which is very useful for mathematical operations or comparisons.
-
----
 
 ## 4. Comparing IDs
 
@@ -54,3 +48,7 @@ All three libraries work exactly as you would expect when comparing:
 - **KairosId** has a simple, modern interface that is easy for developers to use. It's the best choice if you need flexible text formatting.
 - **Ulid** is a great standardized alternative to Guid.
 - **Guid** is the built-in option that everyone knows, but it lacks some modern features like easy access to the creation time.
+
+---
+
+[**← Back to README**](../README.md)

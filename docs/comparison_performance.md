@@ -28,16 +28,16 @@ The following table summarizes the speed and memory usage of each library on mod
 | ParseUlid        |      6.92 ns| 0.04 | 0 B |
 | ParseGuid        |      8.46 ns| 0.05 | 0 B |
 
----
+## Detailed Analysis
 
-## 1. Creating New IDs (`NewKairosId`)
+### 1. Creating New IDs (`NewKairosId`)
 
 **KairosId** is as fast as **Ulid** and about **8 times faster** than creating a standard **Guid**.
 
 - **Why is it fast?** It uses specialized code that takes advantage of modern .NET.
 - **Randomness:** It uses `Random.Shared` to get high-performance random numbers that are safe for most uses.
 
-## 2. Converting to String (`ToString`)
+### 2. Converting to String (`ToString`)
 
 The speed of `ToString()` depends on the format you choose.
 
@@ -51,11 +51,11 @@ The speed of `ToString()` depends on the format you choose.
 | ToBase32        |    34.10 ns |      72 B |
 | ToHex           |    36.83 ns |      80 B |
 
-## 3. Parsing IDs
+### 3. Parsing IDs
 
 `KairosId` can read (parse) IDs very quickly, taking around **11 ns**. While `Ulid` and `Guid` are slightly faster at parsing, the difference is negligible for most applications.
 
-## Conclusion
+### Conclusion
 
 `KairosId` offers a great balance between speed and size:
 1. **Creation:** Extremely fast, matching industry standards.
@@ -64,4 +64,8 @@ The speed of `ToString()` depends on the format you choose.
 4. **Performance:** Optimized Base58 logic makes it faster than even standard Hex conversions of other IDs.
 
 If you need the absolute highest speed for text conversion, you can use `ToBase32()` instead of the default `ToString()`.
+
+---
+
+[**← Back to README**](../README.md)
 
